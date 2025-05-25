@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>African Penguin Protection - Predator Detection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <!-- Navigation -->
+    <nav class="bg-blue-900 text-white fixed w-full z-10 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold">African Penguin Protection</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="#home" class="hover:text-blue-300 transition">Home</a>
+                    <a href="#about" class="hover:text-blue-300 transition">About</a>
+                    <a href="#threats" class="hover:text-blue-300 transition">Threats</a>
+                    <a href="stats.html" class="hover:text-blue-300 transition">Statistics</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="min-h-screen flex items-center bg-cover bg-center" style="background-image: url('Images/African-Penguins-header.jpg')">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center fade-in" style="background-color: rgba(0, 0, 0, 0.179); border-radius: 16px; padding: 1.5rem; backdrop-filter: blur(1.5px); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);">
+            <h2 class="text-4xl md:text-6xl font-bold text-white mb-4">De Hoop Predator Dashboard</h2>
+            <p class="text-xl md:text-xl text-white mb-6">Advanced predator detection for penguin enclosures</p>
+            <a href="stats.html" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">View Stats</a>
+            <p></p>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 fade-in">Our Mission</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="fade-in">
+                    <h3 class="text-2xl text-center font-semibold mb-4">Safeguarding Penguins</h3>
+                    <p class="text-gray-600">Penguins in enclosures face threats from predators like caracals and honey badgers. Our technology ensures their safety, preserving these beloved species.</p>
+                </div>
+                <div class="fade-in">
+                    <h3 class="text-2xl text-center font-semibold mb-4">Smart Detection</h3>
+                    <p class="text-gray-600">Using AI-driven cameras and sensors, we monitor penguin enclosures 24/7, detecting and deterring predators without harming them.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Threats Section -->
+    <section id="threats" class="py-20 bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 fade-in">Predator Threats</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <a href="caracal.html" class="bg-white rounded-lg shadow-lg p-6 fade-in hover:shadow-xl transition-shadow">
+                    <img src="Images/Caracal.jpg" alt="Caracal" class="w-full h-48 object-cover rounded-lg mb-4">
+                    <h3 class="text-2xl font-semibold mb-2">Caracal</h3>
+                    <p class="text-gray-600">Agile and stealthy, caracals can breach enclosures.          Click to view detection stats.</p>
+                </a>
+                <a href="honeybadger.html" class="bg-white rounded-lg shadow-lg p-6 fade-in hover:shadow-xl transition-shadow">
+                    <img src="Images/HoneyBadger.jpg" alt="Honey Badger" class="w-full h-48 object-cover rounded-lg mb-4">
+                    <h3 class="text-2xl font-semibold mb-2">Honey Badger</h3>
+                    <p class="text-gray-600">Tenacious and cunning, honey badgers pose a risk to penguins. Click to view detection stats.</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Tile Section -->
+    <section id="stats" class="py-20 bg-blue-900 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 fade-in">View Full Statistics</h2>
+            <div class="max-w-lg mx-auto">
+                <a href="stats.html" class="bg-white rounded-lg shadow-lg p-6 fade-in hover:shadow-xl transition-shadow block">
+                    <img src="Images/statis.jpg" alt="Combined Stats" class="w-full h-48 object-cover rounded-lg mb-4">
+                    <h3 class="text-2xl font-semibold mb-2 text-gray-800">Combined Predator Stats</h3>
+                    <p class="text-gray-600">Click to view combined detection stats for caracals and honey badgers.</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p>© 2025. All rights reserved.</p>
+            <div class="mt-4 flex justify-center space-x-4">
+                <a href="#" class="hover:text-blue-300 transition"></a>
+                <a href="#" class="hover:text-blue-300 transition"></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Fade-In Animations -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const elements = document.querySelectorAll('.fade-in');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            elements.forEach(element => observer.observe(element));
+        });
+    </script>
+</body>
+</html>
