@@ -1,0 +1,121 @@
+# Arduino-Based Predator Deterrence System
+
+Welcome to the GitHub repository for the Arduino-based predator deterrence subsystem, designed to protect African penguin enclosures from terrestrial predators such as caracals, honey badgers, and leopards.
+
+This system uses a combination of light, sound, and servo-driven motion to startle and discourage predator entry. It is a part of a larger AI-enabled detection and prevention system.
+
+## 🔌 System Architecture
+
+* **Trigger**: A HIGH signal is sent to the Arduino when a predator is detected.
+* **Control Unit**: Arduino Uno R3 receives the signal and executes randomized deterrent routines.
+* **Outputs**:
+
+  * **Buzzers**: Driven through TIP122 transistors, powered by 22V for maximum volume.
+  * **LEDs**: Flash in randomized intervals, also via TIP122 and series resistors.
+  * **Servo**: Oscillates cones to improve coverage.
+
+---
+
+## 🧠 Logic Flow
+
+1. Detection system sends HIGH signal to Arduino Pin 8.
+2. Arduino randomly selects a deterrent routine (6 sound patterns).
+3. LEDs flash in non-repetitive patterns.
+4. Servo motor oscillates to simulate movement.
+
+---
+
+## 💡 Schematic Images
+
+![Buzzer Schematic](images/buzzer_schematic.png)
+*Figure 1: TIP122 driving piezo buzzers using resistors for simulation.*
+
+![LED Schematic](images/led_schematic.png)
+*Figure 2: BDD LED schematic with TIP122 switching and series resistor.*
+
+![Servo Sweep](images/servo_angle_diagram.png)
+*Figure 3: Servo sweep angle diagram (60° to 120°).*
+
+---
+
+## 🧾 Arduino Code (Core Deterrence Logic)
+
+```cpp
+const int buzzerPins[] = {10, 11};
+const int ledPin = 12;
+const int systemTriggerPin = 8; // Trigger input from detection system
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  for (int i = 0; i < 2; i++) {
+    pinMode(buzzerPins[i], OUTPUT);
+    digitalWrite(buzzerPins[i], LOW);
+  }
+  pinMode(systemTriggerPin, INPUT);
+  randomSeed(analogRead(0));
+}
+
+void loop() {
+  if (digitalRead(systemTriggerPin) == HIGH) {
+    int pattern = random(1, 7);
+    while (digitalRead(systemTriggerPin) == HIGH) {
+      playSiren(pattern);
+    }
+    for (int i = 0; i < 2; i++) digitalWrite(buzzerPins[i], LOW);
+    digitalWrite(ledPin, LOW);
+  }
+  delay(3000);
+}
+
+void buzzAndLight(int delayOn, int delayOff) {
+  for (int i = 0; i < 2; i++) digitalWrite(buzzerPins[i], HIGH);
+  digitalWrite(ledPin, HIGH);
+  delay(delayOn);
+  for (int i = 0; i < 2; i++) digitalWrite(buzzerPins[i], LOW);
+  digitalWrite(ledPin, LOW);
+  delay(delayOff);
+}
+
+void playSiren(int type) {
+  switch (type) {
+    case 1: whoop(); break;
+    case 2: strobe(); break;
+    case 3: slowPulse(); break;
+    case 4: warble(); break;
+    case 5: burstPulse(); break;
+    case 6: tripleBeep(); break;
+  }
+}
+
+void whoop() { for (int i = 0; i < 6; i++) buzzAndLight(60 + i * 20, 50); }
+void strobe() { for (int i = 0; i < 10; i++) buzzAndLight(30, 30); }
+void slowPulse() { for (int i = 0; i < 4; i++) buzzAndLight(250, 250); }
+void warble() {
+  for (int i = 0; i < 6; i++) {
+    int on = (i % 2 == 0) ? 100 : 50;
+    int off = (i % 2 == 0) ? 50 : 100;
+    buzzAndLight(on, off);
+  }
+}
+void burstPulse() {
+  for (int i = 0; i < 3; i++) {
+    buzzAndLight(80, 40);
+    buzzAndLight(80, 400);
+  }
+}
+void tripleBeep() { for (int i = 0; i < 3; i++) buzzAndLight(120, 120); }
+```
+
+---
+
+## 📌 Notes
+
+* Shared ground is essential for transistor switching.
+* 1kΩ resistors limit base current into TIP122 from Arduino.
+* 1.5Ω series resistors protect LEDs when driven from 12V.
+
+---
+
+## 📦 License
+
+This project is open-source for educational and research purposes. Feel free to adapt and improve it for your own deterrence systems!
