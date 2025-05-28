@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>African Penguin Protection - Predator Detection</title>
+    <title>African Penguin Protection - Combined Predator Stats</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -19,10 +23,105 @@
             opacity: 1;
             transform: translateY(0);
         }
+        #charts-container {
+            max-width: 1200px;
+            margin: 0 auto 40px auto;
+            background: #ffffffdd;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+        }
+        #charts-container > div {
+            flex: 1 1 400px;
+            max-width: 600px;
+        }
+        canvas {
+            height: 300px !important;
+            max-width: 100% !important;
+        }
+        #animal-list {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: none;
+        }
+        .detection-card {
+            margin-bottom: 20px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #D1D5DB;
+            transition: 0.4s;
+            border-radius: 24px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #10B981;
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        .notification-fields {
+            margin-top: 10px;
+            display: none;
+        }
+        .notification-fields.active {
+            display: block;
+        }
+        #notification-feedback {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        #notification-feedback.success {
+            display: block;
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+        #notification-feedback.error {
+            display: block;
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+        @media (max-width: 768px) {
+            #charts-container {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
-    <!-- Navigation -->
     <nav class="bg-blue-900 text-white fixed w-full z-10 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
@@ -30,100 +129,931 @@
                     <h1 class="text-xl font-bold">African Penguin Protection</h1>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="#home" class="hover:text-blue-300 transition">Home</a>
-                    <a href="#about" class="hover:text-blue-300 transition">About</a>
-                    <a href="#threats" class="hover:text-blue-300 transition">Threats</a>
-                    <a href="stats.html" class="hover:text-blue-300 transition">Statistics</a>
+                    <a href="about.html" class="hover:text-blue-300 transition">Back to Home</a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section id="home" class="min-h-screen flex items-center bg-cover bg-center" style="background-image: url('Images/African-Penguins-header.jpg')">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center fade-in" style="background-color: rgba(0, 0, 0, 0.179); border-radius: 16px; padding: 1.5rem; backdrop-filter: blur(1.5px); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);">
-            <h2 class="text-4xl md:text-6xl font-bold text-white mb-4">De Hoop Predator Dashboard</h2>
-            <p class="text-xl md:text-xl text-white mb-6">Advanced predator detection for penguin enclosures</p>
-            <a href="stats.html" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">View Stats</a>
-            <p></p>
-        </div>
-    </section>
-
-    <!-- About Section -->
-    <section id="about" class="py-20 bg-white">
+    <section class="py-20 pt-32 bg-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 fade-in">Our Mission</h2>
-            <div class="grid md:grid-cols-2 gap-8">
-                <div class="fade-in">
-                    <h3 class="text-2xl text-center font-semibold mb-4">Safeguarding Penguins</h3>
-                    <p class="text-gray-600">Penguins in enclosures face threats from predators like caracals and honey badgers. Our technology ensures their safety, preserving these beloved species.</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 fade-in">Combined Predator Stats</h2>
+            <div class="bg-white rounded-lg shadow-lg p-6 fade-in">
+                <h3 class="text-2xl font-semibold mb-4">Caracal & Honey Badger Activity</h3>
+                <div class="text-gray-600 mb-6">
+                    <p><strong>Total Caracal Detections:</strong> <span id="caracal-total">Loading...</span></p>
+                    <p><strong>Caracal Avg Confidence:</strong> <span id="caracal-avg">Loading...</span></p>
+                    <p><strong>Total Honey Badger Detections:</strong> <span id="honeybadger-total">Loading...</span></p>
+                    <p><strong>Honey Badger Avg Confidence:</strong> <span id="honeybadger-avg">Loading...</span></p>
                 </div>
-                <div class="fade-in">
-                    <h3 class="text-2xl text-center font-semibold mb-4">Smart Detection</h3>
-                    <p class="text-gray-600">Using AI-driven cameras and sensors, we monitor penguin enclosures 24/7, detecting and deterring predators without harming them.</p>
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold mb-2">Notification Settings</h4>
+                    <label class="inline-flex items-center">
+                        <span class="toggle-switch">
+                            <input type="checkbox" id="notification-toggle">
+                            <span class="toggle-slider"></span>
+                        </span>
+                        <span class="ml-2">Enable Email Notifications</span>
+                    </label>
+                    <div id="notification-fields" class="notification-fields">
+                        <div class="mt-2">
+                            <label for="notification-email" class="block text-sm font-medium">Email Address:</label>
+                            <input type="email" id="notification-email" class="mt-1 p-2 border rounded-lg w-full max-w-xs" placeholder="Enter your email" disabled>
+                        </div>
+                        <div class="mt-2">
+                            <label class="block text-sm font-medium">Notify for:</label>
+                            <div class="flex space-x-4 mt-1">
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-1" id="notify-caracal" disabled>
+                                    <span>Caracal</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-1" id="notify-honeybadger" disabled>
+                                    <span>Honey Badger</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-1" id="notify-both" disabled>
+                                    <span>Both</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <label for="confidence-slider" class="block text-sm font-medium">Minimum Confidence (%):</label>
+                            <div class="flex items-center space-x-4">
+                                <input type="range" id="confidence-slider" min="0" max="100" step="1" value="85" class="w-full max-w-xs" disabled>
+                                <span id="confidence-value">85</span>%
+                            </div>
+                        </div>
+                        <div class="mt-4 flex space-x-2">
+                            <button id="notification-submit" class="bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                                Submit
+                            </button>
+                            <button id="test-detection-email" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                                Detection Email
+                            </button>
+                        </div>
+                        <div id="notification-feedback"></div>
+                    </div>
                 </div>
+                <div class="mb-6">
+                    <label for="date-select" class="block text-lg font-semibold mb-2">Select a Date:</label>
+                    <select id="date-select" class="w-full max-w-xs p-2 border rounded-lg">
+                        <option value="">Select a date</option>
+                    </select>
+                    <div id="date-details" class="mt-4 bg-white rounded-lg shadow p-4 hidden">
+                        <h5 class="text-lg font-semibold">Detections on <span id="detail-date"></span></h5>
+                        <div id="detection-list"></div>
+                    </div>
+                </div>
+                <div id="charts-container">
+                    <div>
+                        <h4 class="text-center mb-3">Detection Frequency</h4>
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                    <div>
+                        <h4 class="text-center mb-3">Detections by Time of Day</h4>
+                        <canvas id="scatterChart"></canvas>
+                    </div>
+                    <div>
+                        <h4 class="text-center mb-3">Detections by Day</h4>
+                        <canvas id="stackedBarChart"></canvas>
+                    </div>
+                </div>
+                <div class="text-center mt-6">
+                    <button id="toggle-detections" class="bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition">
+                        Show Detections
+                    </button>
+                </div>
+                <div id="animal-list" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6"></div>
             </div>
         </div>
     </section>
 
-    <!-- Threats Section -->
-    <section id="threats" class="py-20 bg-gray-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 fade-in">Predator Threats</h2>
-            <div class="grid md:grid-cols-2 gap-8">
-                <a href="caracal.html" class="bg-white rounded-lg shadow-lg p-6 fade-in hover:shadow-xl transition-shadow">
-                    <img src="Images/Caracal.jpg" alt="Caracal" class="w-full h-48 object-cover rounded-lg mb-4">
-                    <h3 class="text-2xl font-semibold mb-2">Caracal</h3>
-                    <p class="text-gray-600">Agile and stealthy, caracals can breach enclosures.          Click to view detection stats.</p>
-                </a>
-                <a href="honeybadger.html" class="bg-white rounded-lg shadow-lg p-6 fade-in hover:shadow-xl transition-shadow">
-                    <img src="Images/HoneyBadger.jpg" alt="Honey Badger" class="w-full h-48 object-cover rounded-lg mb-4">
-                    <h3 class="text-2xl font-semibold mb-2">Honey Badger</h3>
-                    <p class="text-gray-600">Tenacious and cunning, honey badgers pose a risk to penguins. Click to view detection stats.</p>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Stats Tile Section -->
-    <section id="stats" class="py-20 bg-blue-900 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 fade-in">View Full Statistics</h2>
-            <div class="max-w-lg mx-auto">
-                <a href="stats.html" class="bg-white rounded-lg shadow-lg p-6 fade-in hover:shadow-xl transition-shadow block">
-                    <img src="Images/statis.jpg" alt="Combined Stats" class="w-full h-48 object-cover rounded-lg mb-4">
-                    <h3 class="text-2xl font-semibold mb-2 text-gray-800">Combined Predator Stats</h3>
-                    <p class="text-gray-600">Click to view combined detection stats for caracals and honey badgers.</p>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
     <footer class="bg-gray-900 text-white py-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <p>© 2025. All rights reserved.</p>
             <div class="mt-4 flex justify-center space-x-4">
-                <a href="#" class="hover:text-blue-300 transition"></a>
-                <a href="#" class="hover:text-blue-300 transition"></a>
+                <a href="#" class="hover:text-blue-300 transition">Privacy Policy</a>
+                <a href="#" class="hover:text-blue-300 transition">Terms of Service</a>
             </div>
         </div>
     </footer>
 
-    <!-- JavaScript for Fade-In Animations -->
     <script>
+        function initEmailJS() {
+            return new Promise((resolve) => {
+                const checkEmailJSAvailable = (attempts = 5, delay = 1000) => {
+                    if (typeof emailjs !== 'undefined' && window.emailjs) {
+                        try {
+                            emailjs.init('BV38tG91jMwHU3Y0h');
+                            console.log('EmailJS initialized successfully.');
+                            resolve(true);
+                        } catch (error) {
+                            console.error('Failed to initialize EmailJS:', error);
+                            showNotificationFeedback('Email notifications unavailable.', false);
+                            resolve(false);
+                        }
+                    } else if (attempts > 0) {
+                        console.warn(`EmailJS SDK not loaded yet. Retrying... (${attempts} attempts left)`);
+                        setTimeout(() => checkEmailJSAvailable(attempts - 1, delay * 1.5), delay);
+                    } else {
+                        console.error('EmailJS SDK failed to load after retries.');
+                        showNotificationFeedback('Email notifications unavailable.', false);
+                        resolve(false);
+                    }
+                };
+                checkEmailJSAvailable();
+            });
+        }
+
+        function throttle(func, limit) {
+            let lastFunc;
+            let lastRan;
+            return function (...args) {
+                if (!lastRan) {
+                    func.apply(this, args);
+                    lastRan = Date.now();
+                } else {
+                    clearTimeout(lastFunc);
+                    lastFunc = setTimeout(() => {
+                        if ((Date.now() - lastRan) >= limit) {
+                            func.apply(this, args);
+                            lastRan = Date.now();
+                        }
+                    }, limit - (Date.now() - lastRan));
+                }
+            };
+        }
+
+        function sendEmail(templateId, params) {
+            if (!window.emailjs) {
+                console.error('EmailJS SDK not loaded.');
+                showNotificationFeedback('Cannot send email: EmailJS not loaded.', false);
+                return Promise.reject(new Error('EmailJS SDK not loaded'));
+            }
+
+            if (!params || typeof params !== 'object' || Object.keys(params).length === 0) {
+                console.error(`Invalid or empty parameters for template ${templateId}:`, params);
+                showNotificationFeedback('Cannot send email: Invalid parameters.', false);
+                return Promise.reject(new Error('Invalid parameters'));
+            }
+
+            const requiredParams = templateId === 'template_y094bky' 
+                ? ['to_email', 'animal', 'confidence', 'date', 'time']
+                : ['to_email', 'email', 'animals', 'minConfidence'];
+            const missingParams = requiredParams.filter(param => params[param] === undefined || params[param] === null || params[param] === '');
+            if (missingParams.length > 0) {
+                console.error(`Missing required parameters for template ${templateId}:`, missingParams);
+                showNotificationFeedback(`Cannot send email: Missing parameters (${missingParams.join(', ')}).`, false);
+                return Promise.reject(new Error(`Missing parameters: ${missingParams.join(', ')}`));
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(params.to_email)) {
+                console.error(`Invalid email address: ${params.to_email}`);
+                showNotificationFeedback('Cannot send email: Invalid email address.', false);
+                return Promise.reject(new Error('Invalid email address'));
+            }
+
+            // Normalize email parameters for EmailJS compatibility
+            const normalizedParams = {
+                ...params,
+                email: params.to_email, // Add 'email' field
+                to: params.to_email,    // Add 'to' field
+                recipient_email: params.to_email // Add 'recipient_email' field
+            };
+
+            console.log(`Sending email: Template=${templateId}, To=${params.to_email}, Service=service_77etsef, Payload=${JSON.stringify(normalizedParams, null, 2)}`);
+
+            return emailjs.send('service_77etsef', templateId, normalizedParams)
+                .then((response) => {
+                    console.log(`Email sent successfully: Template=${templateId}, To=${params.to_email}, Status=${response.status}, Text=${response.text}`);
+                    showNotificationFeedback('Email sent successfully!', true);
+                    return response;
+                })
+                .catch((error) => {
+                    const errorMessage = error.text || error.message || JSON.stringify(error, null, 2);
+                    console.error(`EmailJS error: Template=${templateId}, To=${params.to_email || 'unknown'}, Status=${error.status || 'unknown'}, Error=${errorMessage}`);
+                    if (error.status === 422) {
+                        showNotificationFeedback('Failed to send email: Invalid recipient address. Check EmailJS template parameters.', false);
+                    } else {
+                        showNotificationFeedback(`Failed to send email: ${errorMessage}`, false);
+                    }
+                    throw new Error(errorMessage);
+                });
+        }
+
+        function showNotificationFeedback(message, isSuccess) {
+            const feedback = document.getElementById('notification-feedback');
+            feedback.textContent = message;
+            feedback.className = isSuccess ? 'success' : 'error';
+            feedback.style.display = 'block';
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 5000);
+        }
+
+        function decodePushId(pushId) {
+            const chars = '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz';
+            let timestamp = 0;
+            for (let i = 0; i < 8; i++) {
+                const char = pushId[i];
+                timestamp = timestamp * 64 + chars.indexOf(char);
+            }
+            return timestamp;
+        }
+
+        function formatSASTDateTime(timestamp) {
+            const sastOffset = 2 * 60 * 60 * 1000;
+            const date = new Date(timestamp);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            const timeStr = `${hours}:${minutes}:${seconds}`;
+            return { date: dateStr, time: timeStr };
+        }
+
+        function initializeFirebase(callback) {
+            if (typeof firebase === 'undefined' || !firebase.app) {
+                console.error('Firebase SDK not loaded.');
+                callback(null);
+                return;
+            }
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyBPQq-HQwFCsSBeU8HLW_RQTEiwYHrdNj4",
+                authDomain: "animal-detect-db.firebaseapp.com",
+                databaseURL: "https://animal-detect-db-default-rtdb.europe-west1.firebasedatabase.app",
+                projectId: "animal-detect-db",
+                storageBucket: "animal-detect-db.appspot.com",
+                messagingSenderId: "352013795070",
+                appId: "1:352013795070:web:7675ab862ad39a4d41afaf"
+            };
+
+            try {
+                firebase.initializeApp(firebaseConfig);
+                if (!firebase.database) {
+                    throw new Error('Firebase Realtime Database not available.');
+                }
+                callback(firebase.database());
+            } catch (error) {
+                console.error('Error initializing Firebase:', error);
+                callback(null);
+            }
+        }
+
+        function fetchInitialDetections(callback) {
+            initializeFirebase((database) => {
+                if (!database) {
+                    callback([]);
+                    return;
+                }
+
+                const predatorDataRef = database.ref('Predator_data');
+                predatorDataRef.once('value', (snapshot) => {
+                    const data = snapshot.val();
+                    const detections = [];
+                    if (data && data.Animal && data.Value) {
+                        const animalKeys = Object.keys(data.Animal).sort();
+                        const valueKeys = Object.keys(data.Value).sort();
+                        const minLength = Math.min(animalKeys.length, valueKeys.length);
+                        for (let i = 0; i < minLength; i++) {
+                            const animal = data.Animal[animalKeys[i]];
+                            const confidence = parseFloat(data.Value[valueKeys[i]]);
+                            if (animal && !isNaN(confidence)) {
+                                const timestamp = decodePushId(animalKeys[i]);
+                                const { date, time } = formatSASTDateTime(timestamp);
+                                detections.push({
+                                    animal: animal === 'HoneyBadger' ? 'Honey Badger' : animal,
+                                    confidence,
+                                    time,
+                                    date,
+                                    key: animalKeys[i]
+                                });
+                            }
+                        }
+                    }
+                    callback(detections);
+                }, (error) => {
+                    console.error('Error fetching initial Firebase data:', error);
+                    callback([]);
+                });
+            });
+        }
+
+        function monitorNewDetections() {
+            initializeFirebase((database) => {
+                if (!database) {
+                    console.error('Firebase database not initialized.');
+                    showNotificationFeedback('Cannot monitor detections: Firebase not initialized.', false);
+                    return;
+                }
+
+                const animalRef = database.ref('Predator_data/Animal');
+                const valueRef = database.ref('Predator_data/Value');
+                const pendingAnimals = {};
+                const pendingValues = {};
+                const processedPairs = new Set();
+
+                console.log('Setting up Firebase listeners for Predator_data/Animal and Predator_data/Value');
+
+                const throttledSendEmail = throttle((templateId, params) => {
+                    if (!params || !Object.keys(params).length) {
+                        console.error('No valid parameters for email:', params);
+                        return;
+                    }
+                    sendEmail(templateId, params).then(() => {
+                        console.log(`Detection email sent for ${params.animal} to ${params.to_email}`);
+                    }).catch((error) => {
+                        console.error('Failed to send detection email:', error);
+                        database.ref('FailedEmails').push({
+                            params: params,
+                            error: error.message || JSON.stringify(error),
+                            timestamp: Date.now()
+                        });
+                    });
+                }, 10000);
+
+                function cleanupStaleEvents() {
+                    const maxTimeDiff = 3 * 60 * 60 * 1000;
+                    const now = Date.now();
+                    for (const key in pendingAnimals) {
+                        if (now - pendingAnimals[key].timestamp > maxTimeDiff) {
+                            console.log(`Removing stale animal event: Key=${key}, Timestamp=${pendingAnimals[key].timestamp}`);
+                            delete pendingAnimals[key];
+                        }
+                    }
+                    for (const key in pendingValues) {
+                        if (now - pendingValues[key].timestamp > maxTimeDiff) {
+                            console.log(`Removing stale value event: Key=${key}, Timestamp=${pendingValues[key].timestamp}`);
+                            delete pendingValues[key];
+                        }
+                    }
+                }
+
+                setInterval(cleanupStaleEvents, 60 * 60 * 1000);
+
+                animalRef.on('child_added', (snapshot) => {
+                    const key = snapshot.key;
+                    const animal = snapshot.val();
+                    const timestamp = decodePushId(key);
+                    console.log(`Animal event: Key=${key}, Animal=${animal}, Timestamp=${timestamp}`);
+                    pendingAnimals[key] = { animal, timestamp };
+                    tryMatchingPair();
+                    cleanupStaleEvents();
+                }, (error) => {
+                    console.error('Error in animalRef listener:', error);
+                    showNotificationFeedback('Failed to monitor animal detections.', false);
+                });
+
+                valueRef.on('child_added', (snapshot) => {
+                    const key = snapshot.key;
+                    const confidence = parseFloat(snapshot.val());
+                    const timestamp = decodePushId(key);
+                    console.log(`Value event: Key=${key}, Confidence=${confidence}, Timestamp=${timestamp}`);
+                    pendingValues[key] = { confidence, timestamp };
+                    tryMatchingPair();
+                    cleanupStaleEvents();
+                }, (error) => {
+                    console.error('Error in valueRef listener:', error);
+                    showNotificationFeedback('Failed to monitor value detections.', false);
+                });
+
+                function tryMatchingPair() {
+                    const preferences = JSON.parse(localStorage.getItem('notificationPreferences'));
+                    console.log('Checking notification preferences:', preferences);
+                    if (!preferences || !preferences.enabled) {
+                        console.log('Notifications disabled or no preferences found.');
+                        return;
+                    }
+
+                    const { email, notifyCaracal, notifyHoneyBadger, notifyBoth, minConfidence } = preferences;
+
+                    if (!email) {
+                        console.error('No email address in notification preferences.');
+                        return;
+                    }
+
+                    const animalKeys = Object.keys(pendingAnimals).sort();
+                    const valueKeys = Object.keys(pendingValues).sort();
+                    const minLength = Math.min(animalKeys.length, valueKeys.length);
+
+                    if (animalKeys.length !== valueKeys.length) {
+                        console.warn(`Mismatched event counts: ${animalKeys.length} animals, ${valueKeys.length} values`);
+                    }
+
+                    for (let i = 0; i < minLength; i++) {
+                        const animalKey = animalKeys[i];
+                        const valueKey = valueKeys[i];
+                        const pairKey = `${animalKey}:${valueKey}`;
+                        if (processedPairs.has(pairKey)) continue;
+
+                        const animalData = pendingAnimals[animalKey];
+                        const valueData = pendingValues[valueKey];
+
+                        if (!animalData || !valueData) {
+                            console.warn(`Invalid pair: AnimalKey=${animalKey}, ValueKey=${valueKey}`);
+                            continue;
+                        }
+
+                        console.log(`Attempting pair: AnimalKey=${animalKey}, ValueKey=${valueKey}, Animal=${animalData.animal}, Confidence=${valueData.confidence}`);
+
+                        if (valueData.confidence >= minConfidence) {
+                            console.log(`Valid pair found: AnimalKey=${animalKey}, ValueKey=${valueKey}, Confidence=${valueData.confidence}`);
+                            processedPairs.add(pairKey);
+
+                            const normalizedAnimal = animalData.animal === 'HoneyBadger' ? 'Honey Badger' : animalData.animal;
+                            const shouldNotify =
+                                (notifyCaracal && normalizedAnimal.toLowerCase() === 'caracal') ||
+                                (notifyHoneyBadger && normalizedAnimal.toLowerCase() === 'honey badger') ||
+                                (notifyBoth && ['caracal', 'honey badger'].includes(normalizedAnimal.toLowerCase()));
+
+                            if (shouldNotify) {
+                                const { date, time } = formatSASTDateTime(animalData.timestamp);
+                                const emailParams = {
+                                    to_email: email,
+                                    animal: normalizedAnimal,
+                                    confidence: (valueData.confidence * 100).toFixed(2),
+                                    date: date,
+                                    time: time
+                                };
+                                console.log('Queuing detection email:', JSON.stringify(emailParams, null, 2));
+                                throttledSendEmail('template_y094bky', emailParams);
+                            } else {
+                                console.log(`Pair not notified: Animal=${normalizedAnimal}, ShouldNotify=${shouldNotify}`);
+                            }
+
+                            delete pendingAnimals[animalKey];
+                            delete pendingValues[valueKey];
+                        } else {
+                            console.log(`Pair skipped: Confidence=${valueData.confidence} < MinConfidence=${minConfidence}`);
+                        }
+                    }
+
+                    for (const animalKey of Object.keys(pendingAnimals)) {
+                        console.log(`No matching value found for animal event: Key=${animalKey}, Timestamp=${pendingAnimals[animalKey].timestamp}`);
+                    }
+                    for (const valueKey of Object.keys(pendingValues)) {
+                        console.log(`No matching animal found for value event: Key=${valueKey}, Timestamp=${pendingValues[valueKey].timestamp}`);
+                    }
+                }
+
+                window.debugPairEvents = function() {
+                    console.log('Debug: Current pending animals:', JSON.stringify(pendingAnimals, null, 2));
+                    console.log('Debug: Current pending values:', JSON.stringify(pendingValues, null, 2));
+                    tryMatchingPair();
+                };
+
+                window.forcePairAndEmail = function(animalKey, valueKey) {
+                    const animalData = pendingAnimals[animalKey];
+                    const valueData = pendingValues[valueKey];
+                    if (!animalData || !valueData) {
+                        console.error('Invalid keys:', { animalKey, valueKey });
+                        return;
+                    }
+                    const preferences = JSON.parse(localStorage.getItem('notificationPreferences'));
+                    if (!preferences || !preferences.enabled || !preferences.email) {
+                        console.error('No valid notification preferences.');
+                        return;
+                    }
+                    const normalizedAnimal = animalData.animal === 'HoneyBadger' ? 'Honey Badger' : animalData.animal;
+                    const { date, time } = formatSASTDateTime(animalData.timestamp);
+                    const emailParams = {
+                        to_email: preferences.email,
+                        animal: normalizedAnimal,
+                        confidence: (valueData.confidence * 100).toFixed(2),
+                        date: date,
+                        time: time
+                    };
+                    console.log('Force queuing detection email:', JSON.stringify(emailParams, null, 2));
+                    throttledSendEmail('template_y094bky', emailParams);
+                    processedPairs.add(`${animalKey}:${valueKey}`);
+                    delete pendingAnimals[animalKey];
+                    delete pendingValues[valueKey];
+                };
+
+                window.debugFirebaseConnection = function() {
+                    database.ref('.info/connected').on('value', (snapshot) => {
+                        if (snapshot.val() === true) {
+                            console.log('Firebase is connected.');
+                        } else {
+                            console.error('Firebase is disconnected.');
+                            showNotificationFeedback('Lost connection to Firebase.', false);
+                        }
+                    });
+                };
+            });
+        }
+
+        function processData(detections) {
+            const filteredEntries = detections.filter(d => d.confidence > 0.85).slice(0, 50);
+            if (filteredEntries.length === 0) {
+                console.warn('No valid detections found with confidence > 85%');
+            }
+            renderStats(filteredEntries);
+            setupDropdownAndCharts(filteredEntries);
+            setupToggleButton(filteredEntries);
+            setupNotificationToggle();
+        }
+
+        function renderStats(entries) {
+            const caracalEntries = entries.filter(e => e.animal.toLowerCase() === 'caracal');
+            const honeyBadgerEntries = entries.filter(e => e.animal.toLowerCase() === 'honey badger');
+
+            document.getElementById('caracal-total').textContent = caracalEntries.length;
+            document.getElementById('caracal-avg').textContent = caracalEntries.length > 0 
+                ? (caracalEntries.reduce((sum, e) => sum + e.confidence, 0) / caracalEntries.length * 100).toFixed(2) + '%'
+                : 'N/A';
+            document.getElementById('honeybadger-total').textContent = honeyBadgerEntries.length;
+            document.getElementById('honeybadger-avg').textContent = honeyBadgerEntries.length > 0 
+                ? (honeyBadgerEntries.reduce((sum, e) => sum + e.confidence, 0) / honeyBadgerEntries.length * 100).toFixed(2) + '%'
+                : 'N/A';
+        }
+
+        function renderDetections(entries) {
+            const container = document.getElementById('animal-list');
+            container.innerHTML = '';
+
+            if (entries.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-600">No detections found with confidence above 85%.</p>';
+                return;
+            }
+
+            entries.forEach(({ animal, confidence, time, date }) => {
+                const card = `
+                    <div class="detection-card">
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <h5 class="text-lg font-semibold">Animal: ${animal}</h5>
+                            <p>Confidence: ${(confidence * 100).toFixed(2)}%</p>
+                            <p>Time: ${time}</p>
+                            <p>Date: ${date}</p>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        function setupDropdownAndCharts(allEntries) {
+            const dateSelect = document.getElementById('date-select');
+            const dateDetails = document.getElementById('date-details');
+            const detailDate = document.getElementById('detail-date');
+            const detectionList = document.getElementById('detection-list');
+
+            const uniqueDates = [...new Set(allEntries.map(entry => entry.date))].sort();
+            dateSelect.innerHTML = '<option value="">Select a date</option>';
+            uniqueDates.forEach(date => {
+                const option = document.createElement('option');
+                option.value = date;
+                option.textContent = new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                dateSelect.appendChild(option);
+            });
+
+            dateSelect.addEventListener('change', (e) => {
+                const selectedDate = e.target.value;
+                const filteredEntries = selectedDate === '' ? allEntries : allEntries.filter(d => d.date === selectedDate);
+
+                if (selectedDate === '') {
+                    dateDetails.classList.add('hidden');
+                } else {
+                    detailDate.textContent = new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    detectionList.innerHTML = '';
+
+                    if (filteredEntries.length === 0) {
+                        detectionList.innerHTML = '<p class="text-gray-600">No detections on this date.</p>';
+                    } else {
+                        filteredEntries.forEach(({ animal, confidence, time }) => {
+                            const detectionItem = `
+                                <div class="mb-2">
+                                    <p><strong>Animal:</strong> ${animal}</p>
+                                    <p><strong>Confidence:</strong> ${(confidence * 100).toFixed(2)}%</p>
+                                    <p><strong>Time:</strong> ${time}</p>
+                                </div>
+                            `;
+                            detectionList.innerHTML += detectionItem;
+                        });
+                    }
+                    dateDetails.classList.remove('hidden');
+                }
+
+                renderPieChart(filteredEntries);
+                renderScatterChart(filteredEntries);
+                renderStackedBarChart(allEntries);
+            });
+
+            renderPieChart(allEntries);
+            renderScatterChart(allEntries);
+            renderStackedBarChart(allEntries);
+        }
+
+        function setupToggleButton(entries) {
+            const toggleButton = document.getElementById('toggle-detections');
+            const animalList = document.getElementById('animal-list');
+            let isVisible = false;
+
+            renderDetections(entries);
+
+            toggleButton.addEventListener('click', () => {
+                isVisible = !isVisible;
+                animalList.style.display = isVisible ? 'block' : 'none';
+                toggleButton.textContent = isVisible ? 'Hide Detections' : 'Show Detections';
+            });
+        }
+
+        function setupNotificationToggle() {
+            const toggleInput = document.getElementById('notification-toggle');
+            const fields = document.getElementById('notification-fields');
+            const emailInput = document.getElementById('notification-email');
+            const submitButton = document.getElementById('notification-submit');
+            const testButton = document.getElementById('test-detection-email');
+            const confidenceSlider = document.getElementById('confidence-slider');
+            const confidenceValue = document.getElementById('confidence-value');
+            const checkboxes = [
+                document.getElementById('notify-caracal'),
+                document.getElementById('notify-honeybadger'),
+                document.getElementById('notify-both')
+            ];
+
+            const savedPrefs = JSON.parse(localStorage.getItem('notificationPreferences'));
+            if (savedPrefs && savedPrefs.enabled) {
+                toggleInput.checked = true;
+                fields.classList.add('active');
+                emailInput.disabled = false;
+                submitButton.disabled = false;
+                testButton.disabled = false;
+                confidenceSlider.disabled = false;
+                checkboxes.forEach(cb => cb.disabled = false);
+                emailInput.value = savedPrefs.email || '';
+                document.getElementById('notify-caracal').checked = savedPrefs.notifyCaracal || false;
+                document.getElementById('notify-honeybadger').checked = savedPrefs.notifyHoneyBadger || false;
+                document.getElementById('notify-both').checked = savedPrefs.notifyBoth || false;
+                confidenceSlider.value = savedPrefs.minConfidence * 100 || 85;
+                confidenceValue.textContent = confidenceSlider.value;
+            }
+
+            confidenceSlider.addEventListener('input', () => {
+                confidenceValue.textContent = confidenceSlider.value;
+            });
+
+            toggleInput.addEventListener('change', () => {
+                const isChecked = toggleInput.checked;
+                fields.classList.toggle('active', isChecked);
+                emailInput.disabled = !isChecked;
+                submitButton.disabled = !isChecked;
+                testButton.disabled = !isChecked;
+                confidenceSlider.disabled = !isChecked;
+                checkboxes.forEach(cb => cb.disabled = !isChecked);
+                if (!isChecked) {
+                    localStorage.removeItem('notificationPreferences');
+                }
+            });
+
+            submitButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!submitButton.disabled) {
+                    const email = emailInput.value;
+                    const notifyCaracal = document.getElementById('notify-caracal').checked;
+                    const notifyHoneyBadger = document.getElementById('notify-honeybadger').checked;
+                    const notifyBoth = document.getElementById('notify-both').checked;
+                    const minConfidence = confidenceSlider.value / 100;
+
+                    if (!email || (!notifyCaracal && !notifyHoneyBadger && !notifyBoth)) {
+                        showNotificationFeedback('Please provide an email and select at least one notification option.', false);
+                        return;
+                    }
+
+                    const preferences = {
+                        enabled: true,
+                        email,
+                        notifyCaracal,
+                        notifyHoneyBadger,
+                        notifyBoth,
+                        minConfidence
+                    };
+
+                    localStorage.setItem('notificationPreferences', JSON.stringify(preferences));
+
+                    const animalsSelected = [];
+                    if (notifyCaracal) animalsSelected.push('Caracal');
+                    if (notifyHoneyBadger) animalsSelected.push('Honey Badger');
+                    if (notifyBoth) animalsSelected.push('Both');
+                    const animalsStr = animalsSelected.join(', ') || 'None';
+
+                    sendEmail('template_hdmsspc', {
+                        to_email: email,
+                        email: email,
+                        to: email,
+                        recipient_email: email,
+                        animals: animalsStr,
+                        minConfidence: (minConfidence * 100).toFixed(2)
+                    }).then(() => {
+                        showNotificationFeedback('Notification preferences saved! Confirmation email sent.', true);
+                    }).catch((error) => {
+                        showNotificationFeedback(`Preferences saved, but confirmation email failed: ${error.message || 'Unknown error'}`, true);
+                    });
+                }
+            });
+
+            testButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!testButton.disabled) {
+                    const email = emailInput.value;
+                    if (!email) {
+                        showNotificationFeedback('Please provide an email address to test.', false);
+                        return;
+                    }
+                    const testParams = {
+                        to_email: email,
+                        email: email,
+                        to: email,
+                        recipient_email: email,
+                        animal: 'Test Caracal',
+                        confidence: '95.00',
+                        date: '2025-05-27',
+                        time: '02:40:00'
+                    };
+                    console.log('Sending test detection email:', JSON.stringify(testParams, null, 2));
+                    sendEmail('template_y094bky', testParams).then(() => {
+                        showNotificationFeedback('Test detection email sent successfully!', true);
+                    }).catch((error) => {
+                        showNotificationFeedback(`Test detection email failed: ${error.message || 'Unknown error'}`, false);
+                    });
+                }
+            });
+        }
+
+        function renderPieChart(entries) {
+            const countMap = {};
+            entries.forEach(entry => {
+                countMap[entry.animal] = (countMap[entry.animal] || 0) + 1;
+            });
+
+            const pieLabels = Object.keys(countMap);
+            const pieData = Object.values(countMap);
+
+            const pieCtx = document.getElementById('pieChart').getContext('2d');
+            if (window.pieChartInstance) window.pieChartInstance.destroy();
+            window.pieChartInstance = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: pieLabels.length ? pieLabels : ['No Detections'],
+                    datasets: [{
+                        label: 'Detections',
+                        data: pieData.length ? pieData : [1],
+                        backgroundColor: pieData.length ? [
+                            'rgba(45, 106, 126, 0.7)',
+                            'rgba(194, 156, 108, 0.7)'
+                        ] : ['rgba(200, 200, 200, 0.7)'],
+                        borderColor: 'rgba(255, 255, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
+        }
+
+        function renderScatterChart(entries) {
+            const scatterData = entries.map(entry => {
+                const [hours, minutes, seconds] = entry.time.split(':').map(Number);
+                const decimalHours = hours + minutes / 60 + seconds / 3600;
+                return { x: 1, y: decimalHours, animal: entry.animal };
+            });
+
+            const scatterCtx = document.getElementById('scatterChart').getContext('2d');
+            if (window.scatterChartInstance) window.scatterChartInstance.destroy();
+            window.scatterChartInstance = new Chart(scatterCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Caracal',
+                            data: scatterData.filter(d => d.animal.toLowerCase() === 'caracal').map(d => ({ x: d.x, y: d.y })),
+                            borderColor: 'rgba(45, 106, 126, 1)',
+                            backgroundColor: 'rgba(45, 106, 126, 0.7)',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Honey Badger',
+                            data: scatterData.filter(d => d.animal.toLowerCase() === 'honey badger').map(d => ({ x: d.x, y: d.y })),
+                            borderColor: 'rgba(194, 156, 108, 1)',
+                            backgroundColor: 'rgba(194, 156, 108, 0.7)',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { display: false, min: 0, max: 2 },
+                        y: {
+                            min: 0,
+                            max: 24,
+                            title: { display: true, text: 'Hour of Day', font: { size: 14 } },
+                            ticks: {
+                                callback: value => Math.floor(value).toString().padStart(2, '0') + ':00',
+                                stepSize: 2,
+                                font: { size: 12 }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { size: 12 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: context => {
+                                    const hours = Math.floor(context.raw.y);
+                                    const minutes = Math.round((context.raw.y - hours) * 60);
+                                    const time = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                                    return `${context.dataset.label}: ${time}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderStackedBarChart(entries) {
+            const uniqueDates = [...new Set(entries.map(entry => entry.date))].sort();
+            const caracalCounts = uniqueDates.map(day => entries.filter(e => e.date === day && e.animal.toLowerCase() === 'caracal').length);
+            const honeyBadgerCounts = uniqueDates.map(day => entries.filter(e => e.date === day && e.animal.toLowerCase() === 'honey badger').length);
+            const dayLabels = uniqueDates.map(day => new Date(day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+            const stackedBarCtx = document.getElementById('stackedBarChart').getContext('2d');
+            if (window.stackedBarChartInstance) window.stackedBarChartInstance.destroy();
+            window.stackedBarChartInstance = new Chart(stackedBarCtx, {
+                type: 'bar',
+                data: {
+                    labels: dayLabels,
+                    datasets: [
+                        {
+                            label: 'Caracal',
+                            data: caracalCounts,
+                            backgroundColor: 'rgba(45, 106, 126, 0.7)',
+                            borderColor: 'rgba(45, 106, 126, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Honey Badger',
+                            data: honeyBadgerCounts,
+                            backgroundColor: 'rgba(194, 156, 108, 0.7)',
+                            borderColor: 'rgba(194, 156, 108, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            title: { display: true, text: 'Date', font: { size: 14 } },
+                            ticks: { font: { size: 12 } }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            title: { display: true, text: 'Number of Detections', font: { size: 14 } },
+                            ticks: { stepSize: 1, font: { size: 12 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { size: 12 } } }
+                    }
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const elements = document.querySelectorAll('.fade-in');
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                    }
+                    if (entry.isIntersecting) entry.target.classList.add('visible');
                 });
             }, { threshold: 0.1 });
-
             elements.forEach(element => observer.observe(element));
+
+            initEmailJS().then((emailJSInitialized) => {
+                fetchInitialDetections((detections) => {
+                    processData(detections);
+                    if (emailJSInitialized) {
+                        monitorNewDetections();
+                    } else {
+                        console.warn('EmailJS not initialized. Skipping detection monitoring.');
+                        showNotificationFeedback('Email notifications unavailable.', false);
+                    }
+                });
+            });
         });
     </script>
 </body>
-</html>
+</html> 
